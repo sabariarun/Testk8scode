@@ -9,5 +9,5 @@ variable "instance_type" {
 }
 variable "key_name" {
   description = "The key pair name for the EC2 instances"
-  default = "k8skey"   # change here and also change the configuration file while connecting remote
+  default = "Terraform-Key"   # change here and also change the configuration file while connecting remote
 }
