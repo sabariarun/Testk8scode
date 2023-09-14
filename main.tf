@@ -11,6 +11,27 @@ locals {
   name = "bronze"   # change here, optional
 }
 
+resource "aws_s3_bucket_acl" "s3_bucket_acl" {
+  bucket = aws_s3_bucket.s3buckit.id
+  acl    = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.s3_bucket_acl_ownership]
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_acl_ownership" {
+  bucket = aws_s3_bucket.s3buckit.id
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+}
+
+resource "aws_s3_bucket" "s3buckit" {
+  bucket = "k8s-${random_string.s3name.result}"
+  force_destroy = true
+ depends_on = [
+    random_string.s3name
+  ]
+}
+
 resource "aws_instance" "master" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
@@ -22,6 +43,17 @@ resource "aws_instance" "master" {
     Name = "${local.name}-kube-master"
   }
 }
+ user_data_base64 = base64encode("${templatefile("scripts/master.sh", {
+
+    access_key = var.access_key
+    private_key = var.secret_key
+    region = var.aws_region
+    s3buckit_name = "k8s-${random_string.s3name.result}"
+    })}")
+depends_on = [
+    aws_s3_bucket.s3buckit,
+    random_string.s3name
+  ]
 
 resource "aws_instance" "worker" {
   ami                  = var.ami_name
@@ -35,6 +67,16 @@ resource "aws_instance" "worker" {
   }
   depends_on = [aws_instance.master]
 }
+user_data_base64 = base64encode("${templatefile("scripts/worker.sh", {
+ access_key = var.access_key
+ private_key = var.secret_key
+  region = var.aws_region
+  s3buckit_name = "k8s-${random_string.s3name.result}"
+    })}")
+depends_on = [
+    aws_s3_bucket.s3buckit,
+    random_string.s3name
+  ]
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
   name = "ec2connectprofile-pro-${local.name}"
