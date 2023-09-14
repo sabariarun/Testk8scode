@@ -19,28 +19,28 @@ resource "aws_instance" "master" {
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   user_data              = <<-EOF
   #!/bin/bash
-  apt update -y
-  apt install docker.io -y
-  systemctl enable docker.service
-  usermod -aG docker ubuntu
-  apt install -y apt-transport-https curl
+  sudo apt update -y
+  sudo apt install docker.io -y
+  sudo systemctl enable docker.service
+  sudo usermod -aG docker ubuntu
+  sudo apt install -y apt-transport-https curl
   curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
-  apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-  apt update -y
-  apt install -y kubelet kubeadm kubectl
-  sysctl -w net.ipv4.ip_forward=1
-  sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
+  sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+  sudo apt update -y
+  sudo apt install -y kubelet kubeadm kubectl
+  sudo sysctl -w net.ipv4.ip_forward=1
+  sudo sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
   # Ignore preflight in order to have master running on t2.micro, otherwise remove it 
-  kubeadm init --token ${local.token} \
+  sudo kubeadm init --token ${local.token} \
   --pod-network-cidr=10.244.0.0/16 \
   --service-cidr=10.96.0.0/12 \
   --ignore-preflight-errors=all
   sleep 30
-  mkdir -p /home/ubuntu/.kube ~/.kube
-  cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-  chown ubuntu:ubuntu /home/ubuntu/.kube/config
-  export KUBECONFIG=/etc/kubernetes/admin.conf
-  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  sudo mkdir -p /home/ubuntu/.kube ~/.kube
+  sudo cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+  sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
+  sudo export KUBECONFIG=/etc/kubernetes/admin.conf
+  sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
   # while [[ $(kubectl -n kube-system get pods -l k8s-app=kube-dns -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do sleep 5; done
   EOF
 
@@ -56,18 +56,18 @@ resource "aws_instance" "worker" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   #!/bin/bash
-  apt update -y
-  apt install docker.io -y
-  systemctl enable docker.service
-  usermod -aG docker ubuntu
-  apt install -y apt-transport-https curl
-  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
-  apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-  apt update -y
-  apt install -y kubelet kubeadm kubectl
-  sysctl -w net.ipv4.ip_forward=1
-  sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
-  kubeadm join ${aws_instance.Master-Node.private_ip}:6443 \
+  sudo apt update -y
+  sudo apt install docker.io -y
+  sudo systemctl enable docker.service
+  sudo usermod -aG docker ubuntu
+  sudo apt install -y apt-transport-https curl
+  sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+  sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+  sudo apt update -y
+  sudo apt install -y kubelet kubeadm kubectl
+  sudo sysctl -w net.ipv4.ip_forward=1
+  sudo sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
+  sudo kubeadm join ${aws_instance.Master-Node.private_ip}:6443 \
   --token ${local.token} \
   --discovery-token-unsafe-skip-ca-verification
   EOF
