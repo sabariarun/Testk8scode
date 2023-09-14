@@ -86,8 +86,8 @@ data "template_file" "worker" {
   template = file("worker.sh")
   vars = {
     region = data.aws_region.current.name
-    master-id = aws_instance.worker.id
-    master-private = aws_instance.worker.private_ip
+    worker-id = aws_instance.worker.id
+    worker-private = aws_instance.worker.private_ip
   }
 
 }
