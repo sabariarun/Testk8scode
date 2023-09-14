@@ -87,7 +87,7 @@ data "template_file" "worker" {
   vars = {
     region = data.aws_region.current.name
     master-id = aws_instance.worker.id
-    master-private = aws_instance.master.private_ip
+    master-private = aws_instance.worker.private_ip
   }
 
 }
