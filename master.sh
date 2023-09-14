@@ -24,8 +24,8 @@ sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config
 systemctl restart containerd
 systemctl enable containerd
 kubeadm config images pull
-#kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=All
-kubeadm init --kubernetes-version=${KUBE_VERSION} --ignore-preflight-errors=NumCPU --skip-token-print --pod-network-cidr 10.244.0.0/16 --cri-socket unix:///var/run/cri-dockerd.sock
+kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=All
+#kubeadm init --kubernetes-version=${KUBE_VERSION} --ignore-preflight-errors=NumCPU --skip-token-print --pod-network-cidr 10.244.0.0/16 --cri-socket unix:///var/run/cri-dockerd.sock
 mkdir -p /home/ubuntu/.kube
 cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
 chown ubuntu:ubuntu /home/ubuntu/.kube/config
