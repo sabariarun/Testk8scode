@@ -18,30 +18,37 @@ resource "aws_instance" "master" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   user_data              = <<-EOF
-  #!/bin/bash
-  sudo apt update -y
-  sudo apt install docker.io -y
-  sudo systemctl enable docker.service
-  sudo usermod -aG docker ubuntu
-  apt install -y apt-transport-https curl
-  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
-  sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-  sudo apt update -y
-  sudo apt install -y kubelet kubeadm kubectl
-  sudo sysctl -w net.ipv4.ip_forward=1
-  sudo sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
-  # Ignore preflight in order to have master running on t2.micro, otherwise remove it 
-  kubeadm init --token ${local.token} \
-  --pod-network-cidr=10.244.0.0/16 \
-  --service-cidr=10.96.0.0/12 \
-  --ignore-preflight-errors=all
-  sleep 30
-  sudo mkdir -p /home/ubuntu/.kube ~/.kube
-  sudo cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
-  sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
-  sudo export KUBECONFIG=/etc/kubernetes/admin.conf
-  sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-  # while [[ $(kubectl -n kube-system get pods -l k8s-app=kube-dns -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do sleep 5; done
+ #! /bin/bash
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo hostnamectl set-hostname kube-master
+sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+sudo echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubelet=1.26.3-00 kubeadm=1.26.3-00 kubectl=1.26.3-00 kubernetes-cni docker.io
+sudo apt-mark hold kubelet kubeadm kubectl
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ubuntu
+sudo newgrp docker
+sudo cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF
+sodo sysctl --system
+sodo mkdir /etc/containerd
+sodo containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1
+sodo sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+sodo systemctl restart containerd
+sodo systemctl enable containerd
+sodo kubeadm config images pull
+sodo kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=All
+sodo mkdir -p /home/ubuntu/.kube
+sodo cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+sodo chown ubuntu:ubuntu /home/ubuntu/.kube/config
+sodo su - ubuntu -c 'kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml'
   EOF
 
   tags = {
