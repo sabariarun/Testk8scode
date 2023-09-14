@@ -11,49 +11,43 @@ locals {
   name = "bronze"   # change here, optional
 }
 
-resource "aws_s3_bucket_acl" "s3_bucket_acl" {
-  bucket = aws_s3_bucket.s3buckit.id
-  acl    = "private"
-  depends_on = [aws_s3_bucket_ownership_controls.s3_bucket_acl_ownership]
-}
-
-resource "aws_s3_bucket_ownership_controls" "s3_bucket_acl_ownership" {
-  bucket = aws_s3_bucket.s3buckit.id
-  rule {
-    object_ownership = "ObjectWriter"
-  }
-}
-
-resource "aws_s3_bucket" "s3buckit" {
-  bucket = "k8s-${random_string.s3name.result}"
-  force_destroy = true
- depends_on = [
-    random_string.s3name
-  ]
-}
-
 resource "aws_instance" "master" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.master.rendered
+  user_data              = <<-EOF
+  #!/bin/bash
+  apt update -y
+  apt install docker.io -y
+  systemctl enable docker.service
+  usermod -aG docker ubuntu
+  apt install -y apt-transport-https curl
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+  apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+  apt update -y
+  apt install -y kubelet kubeadm kubectl
+  sysctl -w net.ipv4.ip_forward=1
+  sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
+  # Ignore preflight in order to have master running on t2.micro, otherwise remove it 
+  kubeadm init --token ${local.token} \
+  --pod-network-cidr=10.244.0.0/16 \
+  --service-cidr=10.96.0.0/12 \
+  --ignore-preflight-errors=all
+  sleep 30
+  mkdir -p /home/ubuntu/.kube ~/.kube
+  cp /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
+  chown ubuntu:ubuntu /home/ubuntu/.kube/config
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+  kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  # while [[ $(kubectl -n kube-system get pods -l k8s-app=kube-dns -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do sleep 5; done
+  EOF
+
   tags = {
     Name = "${local.name}-kube-master"
   }
 }
- user_data_base64 = base64encode("${templatefile("scripts/master.sh", {
-
-    access_key = var.access_key
-    private_key = var.secret_key
-    region = var.aws_region
-    s3buckit_name = "k8s-${random_string.s3name.result}"
-    })}")
-depends_on = [
-    aws_s3_bucket.s3buckit,
-    random_string.s3name
-  ]
 
 resource "aws_instance" "worker" {
   ami                  = var.ami_name
@@ -61,22 +55,26 @@ resource "aws_instance" "worker" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.worker.rendered
+  #!/bin/bash
+  apt update -y
+  apt install docker.io -y
+  systemctl enable docker.service
+  usermod -aG docker ubuntu
+  apt install -y apt-transport-https curl
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
+  apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+  apt update -y
+  apt install -y kubelet kubeadm kubectl
+  sysctl -w net.ipv4.ip_forward=1
+  sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
+  kubeadm join ${aws_instance.Master-Node.private_ip}:6443 \
+  --token ${local.token} \
+  --discovery-token-unsafe-skip-ca-verification
+  EOF
   tags = {
     Name = "${local.name}-kube-worker"
   }
-  depends_on = [aws_instance.master]
-}
-user_data_base64 = base64encode("${templatefile("scripts/worker.sh", {
- access_key = var.access_key
- private_key = var.secret_key
-  region = var.aws_region
-  s3buckit_name = "k8s-${random_string.s3name.result}"
-    })}")
-depends_on = [
-    aws_s3_bucket.s3buckit,
-    random_string.s3name
-  ]
+  
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
   name = "ec2connectprofile-pro-${local.name}"
