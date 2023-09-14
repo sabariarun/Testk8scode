@@ -36,7 +36,7 @@ resource "aws_instance" "worker" {
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile_pro1-${local.name}"
+  name = "ec2connectprofile_pro2-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
