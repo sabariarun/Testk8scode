@@ -37,7 +37,7 @@ sudo cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward                 = 1
-EOF
+EOF>>
 sudo sysctl --system
 sudo mkdir /etc/containerd
 sudo containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1
