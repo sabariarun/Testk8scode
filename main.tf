@@ -12,13 +12,14 @@ locals {
 }
 
 resource "aws_instance" "master" {
+count = var.agent_count
   ami                  = var.ami_name
   instance_type        = var.instance_type
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   user_data              = <<-EOF
- #! /bin/bash
+#! /bin/bash
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo hostnamectl set-hostname kube-master
@@ -49,8 +50,8 @@ sudo mkdir -p /home/ubuntu/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
 sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
 sudo su - ubuntu -c 'kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml'
+# while [[ $(kubectl -n kube-system get pods -l k8s-app=kube-dns -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do sleep 5; done
   EOF
-
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -81,6 +82,7 @@ resource "aws_instance" "worker" {
   tags = {
     Name = "${local.name}-kube-worker"
   }
+}
   
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
