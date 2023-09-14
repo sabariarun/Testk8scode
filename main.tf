@@ -23,7 +23,7 @@ resource "aws_instance" "master" {
   sudo apt install docker.io -y
   sudo systemctl enable docker.service
   sudo usermod -aG docker ubuntu
-  sudo apt install -y apt-transport-https curl
+  apt install -y apt-transport-https curl
   curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
   sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
   sudo apt update -y
@@ -31,7 +31,7 @@ resource "aws_instance" "master" {
   sudo sysctl -w net.ipv4.ip_forward=1
   sudo sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
   # Ignore preflight in order to have master running on t2.micro, otherwise remove it 
-  sudo kubeadm init --token ${local.token} \
+  kubeadm init --token ${local.token} \
   --pod-network-cidr=10.244.0.0/16 \
   --service-cidr=10.96.0.0/12 \
   --ignore-preflight-errors=all
@@ -60,14 +60,14 @@ resource "aws_instance" "worker" {
   sudo apt install docker.io -y
   sudo systemctl enable docker.service
   sudo usermod -aG docker ubuntu
-  sudo apt install -y apt-transport-https curl
+  apt install -y apt-transport-https curl
   sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add
   sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
   sudo apt update -y
   sudo apt install -y kubelet kubeadm kubectl
   sudo sysctl -w net.ipv4.ip_forward=1
   sudo sed -i 's/net.ipv4.ip_forward=0/net.ipv4.ip_forward=1/Ig' /etc/sysctl.conf
-  sudo kubeadm join ${aws_instance.Master-Node.private_ip}:6443 \
+  kubeadm join ${aws_instance.Master-Node.private_ip}:6443 \
   --token ${local.token} \
   --discovery-token-unsafe-skip-ca-verification
   EOF
