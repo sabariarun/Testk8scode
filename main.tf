@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      version = "~> 4.0"
-    }
-  }
-}
-
 provider "aws" {
   region  = var.region
 }
@@ -25,7 +16,8 @@ resource "aws_instance" "master" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.master.rendered
+  #user_data            = data.template_file.master.rendered
+  user_data = "${data.template_file.user_data.rendered}"
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -37,7 +29,8 @@ resource "aws_instance" "worker" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.worker.rendered
+  #user_data            = data.template_file.worker.rendered
+  user_data = "${data.template_file.user_data.rendered}"
   tags = {
     Name = "${local.name}-kube-worker"
   }
