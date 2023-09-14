@@ -12,7 +12,6 @@ locals {
 }
 
 resource "aws_instance" "master" {
-count = var.agent_count
   ami                  = var.ami_name
   instance_type        = var.instance_type
   key_name             = var.key_name
