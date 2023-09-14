@@ -84,21 +84,16 @@ resource "aws_iam_role" "ec2connectcli" {
 
 data "template_file" "worker" {
   template = file("worker.sh")
-  vars = {
+vars = {
     region = data.aws_region.current.name
-    worker-id = aws_instance.worker.id
-    worker-private = aws_instance.worker.private_ip
+    master-id = aws_instance.master.id
+    master-private = aws_instance.master.private_ip
   }
 
 }
 
 data "template_file" "master" {
   template = file("master.sh")
-vars = {
-    region = data.aws_region.current.name
-    master-id = aws_instance.master.id
-    master-private = aws_instance.master.private_ip
-  }
 }
 
 resource "aws_security_group" "tf-k8s-master-sec-gr" {
