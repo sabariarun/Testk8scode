@@ -94,6 +94,11 @@ data "template_file" "worker" {
 
 data "template_file" "master" {
   template = file("master.sh")
+vars = {
+    region = data.aws_region.current.name
+    master-id = aws_instance.master.id
+    master-private = aws_instance.master.private_ip
+  }
 }
 
 resource "aws_security_group" "tf-k8s-master-sec-gr" {
