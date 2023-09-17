@@ -22,27 +22,24 @@ resource "aws_instance" "master" {
   }
 }
 connection {
-    user = "ubuntu"
-    private_key = "${var.private_key_file}"
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = "Terraform-Key"
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done"
-    ]
-  }
   provisioner "file" {
-    source = "master.sh"
+    source      = "master.sh"
     destination = "/tmp/master.sh"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/master.sh",
-      "/tmp/master.sh"
+      "sudo chmod +x /tmp/master.sh",
+      "sudo su - root 'bash master.sh' &"
     ]
   }
 }
+
 resource "aws_instance" "worker" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
@@ -56,24 +53,20 @@ resource "aws_instance" "worker" {
 }
 
 connection {
-    user = "ubuntu"
-    private_key = "${var.private_key_file}"
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = "Terraform-Key"
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do sleep 1; done"
-    ]
-  }
   provisioner "file" {
-    source = "worker.sh"
+    source      = "worker.sh"
     destination = "/tmp/worker.sh"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/worker.sh",
-      "/tmp/worker.sh"
+      "sudo chmod +x /tmp/worker.sh",
+      "sudo su - root 'bash worker.sh' &"
     ]
   }
 }
