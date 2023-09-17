@@ -23,7 +23,7 @@ resource "aws_instance" "master" {
 }
 connection {
     user = "ubuntu"
-    private_key = "${var.key_name}"
+    private_key = "${var.private_key_file}"
   }
 
   provisioner "remote-exec" {
@@ -57,7 +57,7 @@ resource "aws_instance" "worker" {
 
 connection {
     user = "ubuntu"
-    private_key = "${var.key_name}"
+    private_key = "${var.private_key_file}"
   }
 
   provisioner "remote-exec" {
