@@ -22,10 +22,13 @@ resource "aws_instance" "master" {
   }
 }
 connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    private_key = "Terraform-Key"
-  }
+        bastion_user = "ubuntu"
+        bastion_host = aws_instance.bastion.public_ip
+        user = "ubuntu"
+        host = self.private_ip
+        timeout = "60s"
+      }
+   
 
   provisioner "file" {
     source      = "master.sh"
@@ -53,10 +56,12 @@ resource "aws_instance" "worker" {
 }
 
 connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    private_key = "Terraform-Key"
-  }
+        bastion_user = "ubuntu"
+        bastion_host = aws_instance.bastion.public_ip
+        user = "ubuntu"
+        host = self.private_ip
+        timeout = "60s"
+      }
 
   provisioner "file" {
     source      = "worker.sh"
