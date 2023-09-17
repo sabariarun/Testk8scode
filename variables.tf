@@ -11,3 +11,5 @@ variable "key_name" {
   description = "The key pair name for the EC2 instances"
   default = "Terraform-Key"   # change here and also change the configuration file while connecting remote
 }
+variable "private_key_file" {
+}
