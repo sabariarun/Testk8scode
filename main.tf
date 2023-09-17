@@ -49,7 +49,8 @@ resource "aws_instance" "master" {
   sudo cp -i /etc/kubernetes/admin.conf /home/ubuntu/.kube/config
   sudo chown ubuntu:ubuntu /home/ubuntu/.kube/config
   sudo su - ubuntu -c 'kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml'
-  
+  ELO
+
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -95,7 +96,7 @@ sudo pip3 install ec2instanceconnectcli
 sudo apt install -y mssh
 sudo until [[ $(mssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t ${master-id} -r ${region} ubuntu@${master-id} kubectl get no | awk 'NR == 2 {print $2}') == Ready ]]; do echo "master node is not ready"; sleep 3; done;
 sudo kubeadm join ${master-private}:6443 --token $(mssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t ${master-id} -r ${region} ubuntu@${master-id} kubeadm token list | awk 'NR == 2 {print $1}') --discovery-token-ca-cert-hash sha256:$(mssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -t ${master-id} -r ${region} ubuntu@${master-id} openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //') --ignore-preflight-errors=All
-  EOL
+EOL
 
   tags = {
     Name = "${local.name}-kube-worker"
