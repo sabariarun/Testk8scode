@@ -22,16 +22,6 @@ resource "aws_instance" "master" {
     Name = "${local.name}-kube-master"
   }
 }
-instance_count = "${var.ec2__application["count"]}"
-  ami            = "${data.aws_ami}"
-  instance_type  = "${var.instance_type["type"]}"
-  key_name       = "${var.key_name["ssh_key"]}"
-
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    private_key = "Terraform-Key"
-}
 
   provisioner "file" {
     source      = "master.sh"
@@ -43,8 +33,15 @@ instance_count = "${var.ec2__application["count"]}"
       "sudo chmod +x /tmp/master.sh",
       "sudo su - root 'bash master.sh' &"
     ]
+connection {
+      type        = "ssh"
+      host        = self.public_ip
+      user        = "ubuntu"
+      private_key = file("./Terraform-Key.pem")
   }
 }
+}
+
 
 resource "aws_instance" "worker" {
   ami                  = var.ami_name
@@ -59,16 +56,6 @@ resource "aws_instance" "worker" {
   depends_on = [aws_instance.master]
 }
 
-instance_count = "${var.ec2__application["count"]}"
-  ami            = "${data.aws_ami}"
-  instance_type  = "${var.instance_type["type"]}"
-  key_name       = "${var.key_name["ssh_key"]}"
-
-  connection {
-    type        = "ssh"
-    user        = "ec2-user"
-    private_key = "Terraform-Key"
-}
 
   provisioner "file" {
     source      = "worker.sh"
@@ -80,7 +67,13 @@ instance_count = "${var.ec2__application["count"]}"
       "sudo chmod +x /tmp/worker.sh",
       "sudo su - root 'bash worker.sh' &"
     ]
+connection {
+      type        = "ssh"
+      host        = self.public_ip
+      user        = "ubuntu"
+      private_key = file("./Terraform-Key.pem")
   }
+}
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
