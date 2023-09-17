@@ -21,14 +21,16 @@ resource "aws_instance" "master" {
     Name = "${local.name}-kube-master"
   }
 }
-connection {
-        bastion_user = "ubuntu"
-        bastion_host = aws_instance.bastion.public_ip
-        user = "ubuntu"
-        host = self.private_ip
-        timeout = "60s"
-      }
-   
+instance_count = "${var.ec2__application["count"]}"
+  ami            = "${data.aws_ami}"
+  instance_type  = "${var.instance_type["type"]}"
+  key_name       = "${var.key_name["ssh_key"]}"
+
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = "Terraform-Key"
+}
 
   provisioner "file" {
     source      = "master.sh"
@@ -55,13 +57,16 @@ resource "aws_instance" "worker" {
   depends_on = [aws_instance.master]
 }
 
-connection {
-        bastion_user = "ubuntu"
-        bastion_host = aws_instance.bastion.public_ip
-        user = "ubuntu"
-        host = self.private_ip
-        timeout = "60s"
-      }
+instance_count = "${var.ec2__application["count"]}"
+  ami            = "${data.aws_ami}"
+  instance_type  = "${var.instance_type["type"]}"
+  key_name       = "${var.key_name["ssh_key"]}"
+
+  connection {
+    type        = "ssh"
+    user        = "ec2-user"
+    private_key = "Terraform-Key"
+}
 
   provisioner "file" {
     source      = "worker.sh"
