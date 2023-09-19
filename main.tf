@@ -1,3 +1,4 @@
+
 provider "aws" {
   region  = var.region
 }
@@ -16,32 +17,11 @@ resource "aws_instance" "master" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.master.rendered 
-   
+  user_data            = data.template_file.master.rendered
   tags = {
     Name = "${local.name}-kube-master"
   }
 }
-
-  provisioner "file" {
-    source      = "master.sh"
-    destination = "/tmp/master.sh"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo chmod +x /tmp/master.sh",
-      "sudo su - root 'bash master.sh' &"
-    ]
-connection {
-      type        = "ssh"
-      host        = self.public_ip
-      user        = "ubuntu"
-      private_key = file("./Terraform-Key.pem")
-  }
-}
-}
-
 
 resource "aws_instance" "worker" {
   ami                  = var.ami_name
@@ -49,40 +29,20 @@ resource "aws_instance" "worker" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.master.rendered 
-    tags = {
+  user_data            = data.template_file.worker.rendered
+  tags = {
     Name = "${local.name}-kube-worker"
   }
   depends_on = [aws_instance.master]
 }
 
-
-  provisioner "file" {
-    source      = "worker.sh"
-    destination = "/tmp/worker.sh"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo chmod +x /tmp/worker.sh",
-      "sudo su - root 'bash worker.sh' &"
-    ]
-connection {
-      type        = "ssh"
-      host        = self.public_ip
-      user        = "ubuntu"
-      private_key = file("./Terraform-Key.pem")
-  }
-}
-}
-
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile_pro2-${local.name}"
+  name = "ec2connectprofile-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
 resource "aws_iam_role" "ec2connectcli" {
-  name = "ec2connectcli-${local.name}"
+  name = "ec2connectcli-Profile12-${local.name}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -125,7 +85,7 @@ resource "aws_iam_role" "ec2connectcli" {
 
 data "template_file" "worker" {
   template = file("worker.sh")
-vars = {
+  vars = {
     region = data.aws_region.current.name
     master-id = aws_instance.master.id
     master-private = aws_instance.master.private_ip
