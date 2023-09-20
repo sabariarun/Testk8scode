@@ -23,8 +23,8 @@ resource "aws_instance" "master" {
   }
 }
 connection {
-        bastion_user = "ubuntu"
-        bastion_host = aws_instance.bastion.public_ip
+        master_user = "ubuntu"
+        master_host = aws_instance.master.public_ip
         user = "ec2-user"
         host = self.private_ip
         timeout = "60s"
@@ -53,8 +53,8 @@ connection {
   depends_on = [aws_instance.master]
 }
 connection {
-        bastion_user = "ubuntu"
-        bastion_host = aws_instance.bastion.public_ip
+        worker_user = "ubuntu"
+        worker_host = aws_instance.worker.public_ip
         user = "ec2-user"
         host = self.private_ip
         timeout = "60s"
