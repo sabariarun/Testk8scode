@@ -22,7 +22,18 @@ resource "aws_instance" "master" {
     Name = "${local.name}-kube-master"
   }
 }
+ provisioner "file" {
+    source      = "master.sh"
+    destination = "/tmp/master.sh"
+  }
 
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/master.sh",
+      "/tmp/master.sh args",
+    ]
+  }
+}
 resource "aws_instance" "worker" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
@@ -34,6 +45,18 @@ resource "aws_instance" "worker" {
     Name = "${local.name}-kube-worker"
   }
   depends_on = [aws_instance.master]
+}
+ provisioner "file" {
+    source      = "worker.sh"
+    destination = "/tmp/worker.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/worker.sh",
+      "/tmp/worker.sh args",
+    ]
+  }
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
@@ -81,20 +104,6 @@ resource "aws_iam_role" "ec2connectcli" {
       ]
     })
   }
-}
-
-data "template_file" "worker" {
-  template = file("worker.sh")
-  vars = {
-    region = data.aws_region.current.name
-    master-id = aws_instance.master.id
-    master-private = aws_instance.master.private_ip
-  }
-
-}
-
-data "template_file" "master" {
-  template = file("master.sh")
 }
 
 resource "aws_security_group" "tf-k8s-master-sec-gr" {
