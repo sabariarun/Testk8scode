@@ -32,9 +32,8 @@ resource "aws_instance" "master" {
       "chmod +x /tmp/master.sh",
       "/tmp/master.sh args",
     ]
-  }
 }
-resource "aws_instance" "worker" {
+  resource "aws_instance" "worker" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
   key_name             = var.key_name
@@ -57,8 +56,6 @@ resource "aws_instance" "worker" {
       "/tmp/worker.sh args",
     ]
   }
-}
-
 resource "aws_iam_instance_profile" "ec2connectprofile" {
   name = "ec2connectprofile-88-${local.name}"
   role = aws_iam_role.ec2connectcli.name
