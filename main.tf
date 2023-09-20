@@ -22,6 +22,13 @@ resource "aws_instance" "master" {
     Name = "${local.name}-kube-master"
   }
 }
+connection {
+        bastion_user = "ubuntu"
+        bastion_host = aws_instance.bastion.public_ip
+        user = "ec2-user"
+        host = self.private_ip
+        timeout = "60s"
+      }
  provisioner "file" {
     source      = "master.sh"
     destination = "/tmp/master.sh"
@@ -45,6 +52,13 @@ resource "aws_instance" "master" {
   }
   depends_on = [aws_instance.master]
 }
+connection {
+        bastion_user = "ubuntu"
+        bastion_host = aws_instance.bastion.public_ip
+        user = "ec2-user"
+        host = self.private_ip
+        timeout = "60s"
+      }
  provisioner "file" {
     source      = "worker.sh"
     destination = "/tmp/worker.sh"
