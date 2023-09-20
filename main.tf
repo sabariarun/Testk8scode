@@ -24,10 +24,11 @@ resource "aws_instance" "master" {
   }
 }
 connection {
-        master_user = "ubuntu"
+        type = "ssh"
         master_host = aws_instance.master.public_ip
-        user = "ec2-user"
+        user = "ubuntu"
         host = self.private_ip
+        private_key = file("~/.ssh/terraform")
         timeout = "60s"
       }
  provisioner "file" {
@@ -55,10 +56,11 @@ connection {
   depends_on = [aws_instance.master]
 }
 connection {
-        worker_user = "ubuntu"
-        worker_host = aws_instance.worker.public_ip
-        user = "ec2-user"
+        type = "ssh"
+        master_host = aws_instance.master.public_ip
+        user = "ubuntu"
         host = self.private_ip
+        private_key = file("~/.ssh/terraform")
         timeout = "60s"
       }
  provisioner "file" {
