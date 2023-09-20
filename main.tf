@@ -18,30 +18,12 @@ resource "aws_instance" "master" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   associate_public_ip_address = true
-  user_data            = data.template_file.master.rendered
+  user_data = file("${path.module}/master.sh")
   tags = {
     Name = "${local.name}-kube-master"
   }
 }
-connection {
-        type = "ssh"
-        master_host = aws_instance.master.public_ip
-        user = "ubuntu"
-        host = self.private_ip
-        private_key = file("~/.ssh/terraform")
-        timeout = "60s"
-      }
- provisioner "file" {
-    source      = "master.sh"
-    destination = "/tmp/master.sh"
-  }
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/master.sh",
-      "/tmp/master.sh args",
-    ]
-}
   resource "aws_instance" "worker" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
@@ -49,33 +31,15 @@ connection {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   associate_public_ip_address = true
-  user_data            = data.template_file.worker.rendered
+  user_data = file("${path.module}/worker.sh")
   tags = {
     Name = "${local.name}-kube-worker"
   }
   depends_on = [aws_instance.master]
 }
-connection {
-        type = "ssh"
-        master_host = aws_instance.master.public_ip
-        user = "ubuntu"
-        host = self.private_ip
-        private_key = file("~/.ssh/terraform")
-        timeout = "60s"
-      }
- provisioner "file" {
-    source      = "worker.sh"
-    destination = "/tmp/worker.sh"
-  }
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/worker.sh",
-      "/tmp/worker.sh args",
-    ]
-  }
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile-88-${local.name}"
+  name = "ec2connectprofile-89-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
