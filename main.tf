@@ -18,7 +18,7 @@ resource "aws_instance" "master" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   associate_public_ip_address = true
-  user_data = file("${path.module}/master.sh")
+  user_data = file("${Testk8scode/master.sh}")
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -31,7 +31,7 @@ resource "aws_instance" "master" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   associate_public_ip_address = true
-  user_data = file("${path.module}/worker.sh")
+  user_data = file("${Testk8scode/worker.sh}")
   tags = {
     Name = "${local.name}-kube-worker"
   }
@@ -39,12 +39,12 @@ resource "aws_instance" "master" {
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile-89-${local.name}"
+  name = "ec2connectprofile ${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
 resource "aws_iam_role" "ec2connectcli" {
-  name = "ec2connectcli-Profile12-${local.name}"
+  name = "ec2connectcli-Profile13-${local.name}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
