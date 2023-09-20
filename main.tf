@@ -17,6 +17,7 @@ resource "aws_instance" "master" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
+  associate_public_ip_address = true
   user_data            = data.template_file.master.rendered
   tags = {
     Name = "${local.name}-kube-master"
@@ -46,6 +47,7 @@ connection {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
+  associate_public_ip_address = true
   user_data            = data.template_file.worker.rendered
   tags = {
     Name = "${local.name}-kube-worker"
