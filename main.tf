@@ -7,7 +7,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  name = "bronze"   # change here, optional
+  name = "Arun_testk8s"   # change here, optional
 }
 
 resource "aws_instance" "master" {
@@ -16,7 +16,7 @@ resource "aws_instance" "master" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.master.rendered  
+  user_data            = data.template_file.master  
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -28,7 +28,7 @@ resource "aws_instance" "worker" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.worker.rendered
+  user_data            = data.template_file.worker
   tags = {
     Name = "${local.name}-kube-worker"
   }
