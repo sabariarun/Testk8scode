@@ -18,7 +18,7 @@ resource "aws_instance" "master" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   associate_public_ip_address = true
-  user_data     =  "${file("master.sh")}"
+  user_data     =  "${file("/../../master.sh")}"
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -31,15 +31,15 @@ resource "aws_instance" "master" {
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
   associate_public_ip_address = true
-  user_data     =  "${file("worker.sh")}"
+  user_data     =  "${file("/../../worker.sh")}"
   tags = {
     Name = "${local.name}-kube-worker"
   }
   depends_on = [aws_instance.master]
 }
 
-resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile-${local.name}"
+resource "aws_iam_instance_profile" "ec2connectprofile1" {
+  name = "ec2connectprofile1-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
