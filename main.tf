@@ -7,7 +7,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 locals {
-  name = "Arun_testk8s"   # change here, optional
+  name = "Arun_TFK8S"   # change here, optional
 }
 
 resource "aws_instance" "master" {
@@ -16,7 +16,7 @@ resource "aws_instance" "master" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.master  
+  user_data            = data.template_file.master.rendered
   tags = {
     Name = "${local.name}-kube-master"
   }
@@ -28,7 +28,7 @@ resource "aws_instance" "worker" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  user_data            = data.template_file.worker
+  user_data            = data.template_file.worker.rendered
   tags = {
     Name = "${local.name}-kube-worker"
   }
@@ -36,12 +36,12 @@ resource "aws_instance" "worker" {
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile_pro12-${local.name}"
+  name = "ec2connectprofile15-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
 resource "aws_iam_role" "ec2connectcli" {
-  name = "ec2connectcli12-${local.name}"
+  name = "ec2connectcli1-${local.name}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -94,11 +94,6 @@ data "template_file" "worker" {
 
 data "template_file" "master" {
   template = file("./master.sh")
-vars = {
-    region = data.aws_region.current.name
-    master-id = aws_instance.master.id
-    master-private = aws_instance.master.private_ip
-  }
 }
 
 resource "aws_security_group" "tf-k8s-master-sec-gr" {
