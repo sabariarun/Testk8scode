@@ -38,7 +38,7 @@ resource "aws_instance" "master" {
   depends_on = [aws_instance.master]
 }
 
-resource "aws_iam_instance_profile" "ec2connectprofile1" {
+resource "aws_iam_instance_profile" "ec2connectprofile" {
   name = "ec2connectprofile1-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
