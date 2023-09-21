@@ -1,4 +1,3 @@
-
 provider "aws" {
   region  = var.region
 }
@@ -17,21 +16,19 @@ resource "aws_instance" "master" {
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  associate_public_ip_address = true
-  user_data     =  "${file("./master.sh")}"
+  user_data            = data.template_file.master.rendered  
   tags = {
     Name = "${local.name}-kube-master"
   }
 }
 
-  resource "aws_instance" "worker" {
+resource "aws_instance" "worker" {
   ami                  = var.ami_name
   instance_type        = var.instance_type
   key_name             = var.key_name
   iam_instance_profile = aws_iam_instance_profile.ec2connectprofile.name
   security_groups      = ["${local.name}-k8s-master-sec-gr"]
-  associate_public_ip_address = true
-  user_data     =  "${file("./worker.sh")}"
+  user_data            = data.template_file.worker.rendered
   tags = {
     Name = "${local.name}-kube-worker"
   }
@@ -39,12 +36,12 @@ resource "aws_instance" "master" {
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile2-${local.name}"
+  name = "ec2connectprofile_pro12-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
 resource "aws_iam_role" "ec2connectcli" {
-  name = "ec2connectcli-Profile14-${local.name}"
+  name = "ec2connectcli12-${local.name}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -82,6 +79,25 @@ resource "aws_iam_role" "ec2connectcli" {
         }
       ]
     })
+  }
+}
+
+data "template_file" "worker" {
+  template = file("./worker.sh")
+  vars = {
+    region = data.aws_region.current.name
+    master-id = aws_instance.master.id
+    master-private = aws_instance.master.private_ip
+  }
+
+}
+
+data "template_file" "master" {
+  template = file("./master.sh")
+vars = {
+    region = data.aws_region.current.name
+    master-id = aws_instance.master.id
+    master-private = aws_instance.master.private_ip
   }
 }
 
