@@ -36,12 +36,12 @@ resource "aws_instance" "worker" {
 }
 
 resource "aws_iam_instance_profile" "ec2connectprofile" {
-  name = "ec2connectprofile16-${local.name}"
+  name = "ec2connectprofile17-${local.name}"
   role = aws_iam_role.ec2connectcli.name
 }
 
 resource "aws_iam_role" "ec2connectcli" {
-  name = "ec2connectcli11-${local.name}"
+  name = "ec2connectcli12-${local.name}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
